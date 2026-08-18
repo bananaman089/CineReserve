@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Резервация · CineReserve</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <header class="topbar"></header>
+
+    <main class="container">
+        <h1 id="title">Избор на места</h1>
+        <p id="subtitle" class="muted">Зареждане...</p>
+        <p class="muted" id="balanceHint"></p>
+
+        <div class="legend">
+            <span><i class="dot free"></i> Свободно</span>
+            <span><i class="dot busy"></i> Заето</span>
+            <span><i class="dot picked"></i> Избрано</span>
+        </div>
+
+        <div class="seat-screen">Екран</div>
+        <div id="seatMap" class="seat-map"></div>
+
+        <div class="panel">
+            <label>Тип билет</label>
+            <select id="ticketType">
+                <option value="STANDARD">Стандартен</option>
+                <option value="STUDENT">Студентски (-20%)</option>
+            </select>
+
+            <p class="muted" id="selectionInfo">Избрани места: няма</p>
+
+            <div class="actions">
+                <button class="btn" id="btnReserve" type="button">Резервирай (5 мин)</button>
+                <button class="btn btn-secondary" id="btnPay" type="button" disabled>Плати</button>
+            </div>
+            <div id="bookingMsg" class="msg"></div>
+            <pre id="ticketCodes" class="muted" style="white-space:pre-wrap;"></pre>
+        </div>
+    </main>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/seats.js"></script>
+    <script src="/js/parallax.js"></script>
+    <script src="/js/nav.js"></script>
+    <script src="/js/booking.js"></script>
+    <script>mountAppNav({});</script>
+</body>
+</html>

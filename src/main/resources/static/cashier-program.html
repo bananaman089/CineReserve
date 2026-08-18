@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Програма · Каса</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="admin-body">
+    <header class="topbar"></header>
+    <div class="admin-shell">
+        <aside class="admin-sidebar" id="cashierSidebar"></aside>
+        <main class="admin-main admin-main--page is-ready">
+            <h1>Програма</h1>
+            <p class="muted">Избери кино, после филм и час за продажба на билети.</p>
+
+            <section class="panel" style="margin-top:18px;">
+                <label for="cinemaSelect">Кино</label>
+                <select id="cinemaSelect">
+                    <option value="">Избери кино</option>
+                </select>
+            </section>
+
+            <div id="programList" class="program-list" style="margin-top:18px;"></div>
+            <p id="selectedInfo" class="muted">Няма избран час.</p>
+
+            <div id="ticketPanel" hidden>
+                <div class="legend">
+                    <span><i class="dot free"></i> Свободно</span>
+                    <span><i class="dot busy"></i> Заето</span>
+                    <span><i class="dot picked"></i> Избрано</span>
+                </div>
+                <div class="seat-screen">Екран</div>
+                <div id="seatMap" class="seat-map"></div>
+                <p class="muted" id="seatSelectionInfo">Избрани места: няма</p>
+
+                <div class="panel">
+                    <label>Тип билет</label>
+                    <select id="ticketType">
+                        <option value="STANDARD">Стандартен</option>
+                        <option value="STUDENT">Студентски (-20%)</option>
+                    </select>
+                    <div class="actions">
+                        <button class="btn" id="btnSell" type="button">Продай билети в брой</button>
+                    </div>
+                    <div id="cashierMsg" class="msg"></div>
+                    <pre id="sellOut" class="muted" style="white-space:pre-wrap;"></pre>
+                </div>
+            </div>
+            <div id="cashierMsgTop" class="msg"></div>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/toast.js"></script>
+    <script src="/js/program.js"></script>
+    <script src="/js/seats.js"></script>
+    <script src="/js/parallax.js"></script>
+    <script src="/js/nav.js"></script>
+    <script src="/js/cashier-layout.js"></script>
+    <script>
+        mountCashierSidebar('program');
+        mountAppNav({ showCashier: true });
+    </script>
+    <script src="/js/cashier-program.js"></script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineReserve</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="landing-page">
+    <header class="topbar landing-topbar">
+        <a class="brand" href="/index.html">CineReserve</a>
+        <div class="nav-actions">
+            <button type="button" class="btn btn-secondary" id="btnOpenLogin">Вход</button>
+            <button type="button" class="btn" id="btnOpenRegister">Регистрация</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="landing-hero">
+            <div class="container">
+                <p class="eyebrow">Кино мрежа · билети онлайн</p>
+                <h1>Филмите на екран</h1>
+                <p class="lead">Разгледай програмата, избери час и запази места. Влез, за да купиш билет от баланса си.</p>
+                <div class="actions">
+                    <button type="button" class="btn" id="btnHeroLogin">Вход</button>
+                    <button type="button" class="btn btn-secondary" id="btnHeroRegister">Регистрация</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="container landing-section">
+            <div class="section-head">
+                <h2>Сега на екран</h2>
+                <p class="muted">Град, кино, салон, 2D/3D и часове в 24-часов формат.</p>
+            </div>
+            <div id="landingProgram" class="program-list"></div>
+            <div id="landingMsg" class="msg"></div>
+        </section>
+
+        <section class="container landing-section">
+            <div class="promo-grid">
+                <article class="promo-card">
+                    <h3>Пуканки & напитки</h3>
+                    <p>На касата: пуканки S/M/L, Кола/Спрайт/Фанта 500мл и начос със сос.</p>
+                </article>
+                <article class="promo-card">
+                    <h3>Онлайн баланс</h3>
+                    <p>Зареди пари в акаунта и плащай билети бързо, без опашка.</p>
+                </article>
+                <article class="promo-card">
+                    <h3>Избор на място</h3>
+                    <p>Интерактивна схема: ред и номер на седалка преди плащане.</p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <div class="modal-backdrop" id="authModal" hidden>
+        <div class="modal-card">
+            <button type="button" class="modal-close" id="btnCloseModal">×</button>
+            <div class="modal-tabs">
+                <button type="button" class="tab active" data-tab="login">Вход</button>
+                <button type="button" class="tab" data-tab="register">Регистрация</button>
+            </div>
+
+            <form id="loginForm" class="auth-pane" method="post" action="/login">
+                <label>Потребителско име</label>
+                <input name="username" required autocomplete="username">
+                <label>Парола</label>
+                <input name="password" type="password" required autocomplete="current-password">
+                <div class="actions"><button class="btn" type="submit">Вход</button></div>
+            </form>
+
+            <form id="registerForm" class="auth-pane" hidden>
+                <label>Потребителско име</label>
+                <input id="regUsername" required>
+                <label>Парола</label>
+                <input id="regPassword" type="password" required minlength="4">
+                <div class="actions"><button class="btn" type="submit">Създай акаунт</button></div>
+                <div id="regMsg" class="msg"></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/toast.js"></script>
+    <script src="/js/program.js"></script>
+    <script src="/js/parallax.js"></script>
+    <script src="/js/landing.js?v=20260817"></script>
+</body>
+</html>

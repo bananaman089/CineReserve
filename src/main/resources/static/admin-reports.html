@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отчети · Админ</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="admin-body">
+    <header class="topbar"></header>
+    <div class="admin-shell">
+        <aside class="admin-sidebar" id="adminSidebar"></aside>
+        <main class="admin-main admin-main--page">
+            <h1>Отчети</h1>
+            <p class="muted">Билетите и артикулите са разделени. Първо избери град и кино.</p>
+
+            <section class="panel reports-panel" style="margin-top:18px;">
+                <h2>Билети</h2>
+                <div class="grid-2">
+                    <div>
+                        <label for="ticketCity">Град</label>
+                        <select id="ticketCity">
+                            <option value="">Избери град</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ticketCinema">Кино</label>
+                        <select id="ticketCinema" disabled>
+                            <option value="">Първо избери град</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="ticketMsg" class="msg"></div>
+
+                <div id="revenueReport" class="report-block" hidden>
+                    <h3>Приходи по филм</h3>
+                    <div class="stat-row" id="revenueSummary"></div>
+                    <div class="table-wrap">
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Филм</th>
+                                    <th>Продадени билети</th>
+                                    <th>Приход (€)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="revenueBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="occupancyWrap" hidden>
+                    <div class="report-toolbar" style="margin-top:16px;">
+                        <label for="reportProjectionId">Прожекция за заетост</label>
+                        <select id="reportProjectionId"></select>
+                    </div>
+                    <div id="occupancyReport" class="report-block" hidden>
+                        <h3>Заетост на зала</h3>
+                        <div class="stat-row" id="occupancySummary"></div>
+                        <div class="occupancy-meter" aria-hidden="true">
+                            <div class="occupancy-meter-fill" id="occupancyFill"></div>
+                        </div>
+                        <div class="table-wrap">
+                            <table class="report-table">
+                                <tbody id="occupancyBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel reports-panel" style="margin-top:18px;">
+                <h2>Артикули</h2>
+                <div class="grid-2">
+                    <div>
+                        <label for="productCity">Град</label>
+                        <select id="productCity">
+                            <option value="">Избери град</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="productCinema">Кино</label>
+                        <select id="productCinema" disabled>
+                            <option value="">Първо избери град</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="productMsg" class="msg"></div>
+
+                <div id="productSalesReport" class="report-block" hidden>
+                    <h3>Продадени артикули</h3>
+                    <div class="stat-row" id="productSalesSummary"></div>
+
+                    <h4>По продукт</h4>
+                    <div class="table-wrap">
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Продукт</th>
+                                    <th>Категория</th>
+                                    <th>Размер</th>
+                                    <th>Брой</th>
+                                    <th>Приход (€)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productByProductBody"></tbody>
+                        </table>
+                    </div>
+
+                    <h4>По категория</h4>
+                    <div class="table-wrap">
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Категория</th>
+                                    <th>Брой</th>
+                                    <th>Приход (€)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productByCategoryBody"></tbody>
+                        </table>
+                    </div>
+
+                    <h4>По касиер</h4>
+                    <div class="table-wrap">
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Касиер</th>
+                                    <th>Продажби</th>
+                                    <th>Брой артикули</th>
+                                    <th>Приход (€)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productByCashierBody"></tbody>
+                        </table>
+                    </div>
+
+                    <h4>Всяка продажба</h4>
+                    <div class="table-wrap">
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Дата / час</th>
+                                    <th>Продукт</th>
+                                    <th>Категория</th>
+                                    <th>Размер</th>
+                                    <th>Сос</th>
+                                    <th>Брой</th>
+                                    <th>Ед. цена (€)</th>
+                                    <th>Сума (€)</th>
+                                    <th>Касиер</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productDetailsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/parallax.js"></script>
+    <script src="/js/nav.js"></script>
+    <script src="/js/admin-layout.js"></script>
+    <script>
+        mountAdminSidebar('reports');
+        mountAppNav({ showAdmin: true });
+    </script>
+    <script src="/js/admin-reports.js"></script>
+</body>
+</html>

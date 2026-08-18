@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Акаунт · CineReserve</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <header class="topbar"></header>
+    <main class="container account-page">
+        <h1>Акаунт</h1>
+        <p class="muted">Смени потребителско име и/или парола.</p>
+        <form class="panel account-form" id="profileForm">
+            <label>Ново потребителско име</label>
+            <input id="username" required>
+            <label>Текуща парола (задължителна)</label>
+            <input id="currentPassword" type="password" required>
+            <label>Нова парола (по желание)</label>
+            <input id="newPassword" type="password" minlength="4">
+            <div class="actions"><button class="btn" type="submit">Запази</button></div>
+            <div id="msg" class="msg"></div>
+        </form>
+    </main>
+    <script src="/js/api.js"></script>
+    <script src="/js/parallax.js"></script>
+    <script src="/js/nav.js"></script>
+    <script>
+        mountAppNav({ active: 'account' }).then(user => {
+            if (user) document.getElementById('username').value = user.username;
+        });
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('msg');
+            try {
+                const data = await api('/api/account/profile', {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        username: document.getElementById('username').value.trim(),
+                        currentPassword: document.getElementById('currentPassword').value,
+                        newPassword: document.getElementById('newPassword').value || null
+                    })
+                });
+                showMsg(msg, 'Запазено. Ако си сменил името, влез отново.', true);
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                if (data.username) {
+                    // презареждаме навигацията
+                    await mountAppNav({ active: 'account' });
+                }
+            } catch (err) {
+                showMsg(msg, err.message, false);
+            }
+        });
+    </script>
+</body>
+</html>

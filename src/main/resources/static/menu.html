@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бар меню · CineReserve</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <header class="topbar"></header>
+    <main class="container">
+        <h1>Бар меню</h1>
+        <p class="muted">Само преглед на цени. Поръчката на храна и напитки става на касата.</p>
+        <div id="menuGrid" class="product-grid" style="margin-top:16px;"></div>
+        <div id="msg" class="msg"></div>
+    </main>
+    <script src="/js/api.js"></script>
+    <script src="/js/parallax.js"></script>
+    <script src="/js/nav.js"></script>
+    <script>
+        mountAppNav({});
+        (async () => {
+            const grid = document.getElementById('menuGrid');
+            const msg = document.getElementById('msg');
+            try {
+                const products = await api('/api/products');
+                const byCat = {};
+                products.forEach(p => {
+                    byCat[p.category] = byCat[p.category] || [];
+                    byCat[p.category].push(p);
+                });
+                const labels = { POPCORN: 'Пуканки', DRINK: 'Напитки', NACHOS: 'Начос' };
+                grid.innerHTML = Object.keys(byCat).map(cat => `
+                    <div class="panel" style="grid-column: 1 / -1;">
+                        <h2>${labels[cat] || cat}</h2>
+                        <div class="product-grid">
+                            ${byCat[cat].map(p => `
+                                <div class="product-card" style="cursor:default;">
+                                    <strong>${p.name}</strong>
+                                    <span>${p.sizeLabel || ''}${p.allowsSauce ? ' · със сос на каса' : ''}</span>
+                                    <span class="price">${Number(p.price).toFixed(2)} €</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('') || '<p class="muted">Няма продукти.</p>';
+            } catch (err) {
+                showMsg(msg, err.message, false);
+            }
+        })();
+    </script>
+</body>
+</html>

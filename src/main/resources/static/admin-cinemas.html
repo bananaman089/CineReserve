@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кина и зали · Админ</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="admin-body">
+    <header class="topbar"></header>
+    <div class="admin-shell">
+        <aside class="admin-sidebar" id="adminSidebar"></aside>
+        <main class="admin-main admin-main--page">
+            <h1>Кина и зали</h1>
+            <p class="muted">Създай кино, после добави зала с автоматични места.</p>
+
+            <div class="grid-2" style="margin-top:18px;">
+                <form class="panel" id="cinemaForm">
+                    <h2>Ново кино</h2>
+                    <label>Име</label>
+                    <input id="cinemaName" required>
+                    <label for="cinemaCitySelect">Град</label>
+                    <select id="cinemaCitySelect" required>
+                        <option value="">Избери град</option>
+                        <option value="__new__">+ Нов град</option>
+                    </select>
+                    <div id="cinemaCityNewWrap" hidden>
+                        <label for="cinemaCityNew">Име на новия град</label>
+                        <input id="cinemaCityNew" placeholder="например София">
+                    </div>
+                    <label>Адрес</label>
+                    <input id="cinemaAddress" required>
+                    <div class="actions"><button class="btn" type="submit">Запази кино</button></div>
+                    <div id="cinemaMsg" class="msg"></div>
+                </form>
+
+                <form class="panel" id="hallForm">
+                    <h2>Нова зала</h2>
+                    <label>Кино</label>
+                    <select id="hallCinemaId" required></select>
+                    <label>Име на зала</label>
+                    <input id="hallName" required>
+                    <label>Редове</label>
+                    <input id="hallRows" type="number" min="1" value="5" required>
+                    <label>Места на ред</label>
+                    <input id="hallSeats" type="number" min="1" value="8" required>
+                    <div class="actions"><button class="btn" type="submit">Създай зала + места</button></div>
+                    <div id="hallMsg" class="msg"></div>
+                </form>
+            </div>
+
+            <section class="panel" style="margin-top:18px;">
+                <h2>Изтрий кино</h2>
+                <label>Кино</label>
+                <select id="deleteCinemaId"></select>
+                <div class="actions"><button class="btn btn-danger" id="btnDeleteCinema" type="button">Изтрий кино</button></div>
+                <div id="deleteMsg" class="msg"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/parallax.js"></script>
+    <script src="/js/nav.js"></script>
+    <script src="/js/admin-layout.js"></script>
+    <script>
+        mountAdminSidebar('cinemas');
+        mountAppNav({ showAdmin: true });
+    </script>
+    <script src="/js/admin-cinemas.js"></script>
+</body>
+</html>

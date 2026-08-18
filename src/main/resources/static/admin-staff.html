@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Акаунти · Админ</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="admin-body">
+    <header class="topbar"></header>
+    <div class="admin-shell">
+        <aside class="admin-sidebar" id="adminSidebar"></aside>
+        <main class="admin-main admin-main--page">
+            <h1>Акаунти</h1>
+            <p class="muted">Създавай персонал и изтривай акаунти (включително собствения).</p>
+
+            <section class="panel" style="margin-top:18px;">
+                <form id="staffForm" class="grid-2">
+                    <div>
+                        <label>Потребителско име</label>
+                        <input id="staffUsername" required>
+                    </div>
+                    <div>
+                        <label>Парола</label>
+                        <input id="staffPassword" type="password" minlength="4" required>
+                    </div>
+                    <div>
+                        <label>Роля</label>
+                        <select id="staffRole">
+                            <option value="CASHIER">Касиер</option>
+                            <option value="ADMIN">Администратор</option>
+                        </select>
+                    </div>
+                    <div class="actions" style="align-items:end;">
+                        <button class="btn" type="submit">Създай акаунт</button>
+                    </div>
+                </form>
+                <div id="staffMsg" class="msg"></div>
+                <div class="accounts-columns" style="margin-top:18px;">
+                    <div class="account-col">
+                        <h2>Администратори <span class="muted" id="adminCount"></span></h2>
+                        <div class="table-wrap">
+                            <table class="report-table">
+                                <thead>
+                                    <tr><th>Потребител</th><th></th></tr>
+                                </thead>
+                                <tbody id="adminBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="account-col">
+                        <h2>Касиери <span class="muted" id="cashierCount"></span></h2>
+                        <div class="table-wrap">
+                            <table class="report-table">
+                                <thead>
+                                    <tr><th>Потребител</th><th></th></tr>
+                                </thead>
+                                <tbody id="cashierBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="account-col">
+                        <h2>Потребители <span class="muted" id="clientCount"></span></h2>
+                        <div class="table-wrap">
+                            <table class="report-table">
+                                <thead>
+                                    <tr><th>Потребител</th><th></th></tr>
+                                </thead>
+                                <tbody id="clientBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/parallax.js"></script>
+    <script src="/js/nav.js"></script>
+    <script src="/js/admin-layout.js"></script>
+    <script>
+        mountAdminSidebar('staff');
+        mountAppNav({ showAdmin: true });
+    </script>
+    <script src="/js/admin-staff.js"></script>
+</body>
+</html>

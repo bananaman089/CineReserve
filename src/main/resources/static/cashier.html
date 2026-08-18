@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каса · CineReserve</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="admin-body">
+    <header class="topbar"></header>
+    <div class="admin-shell">
+        <aside class="admin-sidebar" id="cashierSidebar"></aside>
+        <main class="admin-main admin-main--home is-ready">
+            <p class="admin-eyebrow">Касиерски панел</p>
+            <h1 id="cashierGreeting">Здравей!</h1>
+            <p class="muted admin-welcome">
+                Избери програма за билети или храни и напитки отляво.
+            </p>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/toast.js"></script>
+    <script src="/js/parallax.js"></script>
+    <script src="/js/nav.js"></script>
+    <script src="/js/cashier-layout.js"></script>
+    <script>
+        mountCashierSidebar('home');
+        (async () => {
+            const user = await mountAppNav({ showCashier: true });
+            if (user && user.username) setCashierGreeting(user.username);
+        })();
+    </script>
+</body>
+</html>

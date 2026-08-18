@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моите билети · CineReserve</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <header class="topbar"></header>
+    <main class="container">
+        <h1>Моите билети</h1>
+        <p class="muted">Платени билети с филм, място и час.</p>
+        <div id="ticketList" class="list" style="margin-top:16px;"></div>
+        <div id="msg" class="msg"></div>
+    </main>
+    <script src="/js/api.js"></script>
+    <script src="/js/parallax.js"></script>
+    <script src="/js/nav.js"></script>
+    <script>
+        mountAppNav({ active: 'tickets' });
+        (async () => {
+            const list = document.getElementById('ticketList');
+            const msg = document.getElementById('msg');
+            try {
+                const tickets = await api('/api/tickets/my');
+                if (!tickets.length) {
+                    list.innerHTML = '<div class="item"><p class="muted">Нямаш платени билети още.</p></div>';
+                    return;
+                }
+                list.innerHTML = tickets.map(t => {
+                    const cinema = t.projection.hall.cinema || {};
+                    return `
+                        <article class="item">
+                            <h3>${t.projection.movie.title}</h3>
+                            <p>${cinema.city || ''} · ${cinema.name || ''} · ${t.projection.hall.name}</p>
+                            <p>
+                                <span class="badge badge-${formatLabel(t.projection.format) === '3D' ? '3d' : '2d'}">${formatLabel(t.projection.format)}</span>
+                                · ${formatDateTime(t.projection.startTime)}
+                            </p>
+                            <p>Място: <b>Ред ${t.seat.rowNum} / място ${t.seat.seatNum}</b> · Цена: <b>${Number(t.price).toFixed(2)} €</b></p>
+                            <p class="muted">${t.uniqueCode || ''}</p>
+                        </article>`;
+                }).join('');
+            } catch (err) {
+                showMsg(msg, err.message, false);
+            }
+        })();
+    </script>
+</body>
+</html>

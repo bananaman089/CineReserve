@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API тест</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 30px auto; padding: 0 16px; }
+        button { margin: 4px 4px 4px 0; padding: 8px 12px; cursor: pointer; }
+        pre {
+            background: #111;
+            color: #d6ffd6;
+            padding: 12px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            min-height: 180px;
+        }
+        .row { margin-bottom: 10px; }
+        input { padding: 6px; margin-right: 6px; }
+    </style>
+</head>
+<body>
+    <h1>Тест на API-то</h1>
+    <p>1) Влез като <b>admin / admin123</b> на <a href="/login">/login</a>, после се върни тук.</p>
+    <p>2) Натискай бутоните по ред.</p>
+
+    <div class="row">
+        <button onclick="createCinema()">1. Създай кино</button>
+        <button onclick="createHall()">2. Създай зала (5x5)</button>
+        <button onclick="createMovie()">3. Създай филм</button>
+        <button onclick="createProjection()">4. Създай прожекция</button>
+    </div>
+    <div class="row">
+        <button onclick="listSeats()">5. Покажи места</button>
+        <button onclick="reserveSeat()">6. Резервирай място #1</button>
+        <button onclick="payLast()">7. Плати последния билет</button>
+        <button onclick="showReports()">8. Отчети</button>
+    </div>
+    <div class="row">
+        <button onclick="getCinemas()">Списък кина</button>
+        <button onclick="getMovies()">Списък филми</button>
+        <a href="/logout">Изход</a>
+    </div>
+
+    <h3>Резултат</h3>
+    <pre id="out">Готов за тест...</pre>
+
+    <script>
+        let cinemaId = null;
+        let hallId = null;
+        let movieId = null;
+        let projectionId = null;
+        let lastTicketIds = [];
+
+        function show(data) {
+            document.getElementById('out').textContent =
+                typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        }
+
+        async function api(url, options = {}) {
+            const res = await fetch(url, {
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                credentials: 'same-origin',
+                ...options
+            });
+            const text = await res.text();
+            let body;
+            try { body = text ? JSON.parse(text) : null; } catch { body = text; }
+            if (!res.ok) {
+                show({ status: res.status, error: body });
+                throw new Error('HTTP ' + res.status);
+            }
+            show(body);
+            return body;
+        }
+
+        async function createCinema() {
+            const data = await api('/api/admin/cinemas', {
+                method: 'POST',
+                body: JSON.stringify({
+                    name: 'Cinema City Sofia',
+                    city: 'Sofia',
+                    address: 'Mall of Sofia'
+                })
+            });
+            cinemaId = data.id;
+        }
+
+        async function createHall() {
+            if (!cinemaId) return show('Първо създай кино (бутон 1)');
+            const data = await api('/api/admin/halls', {
+                method: 'POST',
+                body: JSON.stringify({
+                    name: 'Hall 1',
+                    cinemaId: cinemaId,
+                    rowsCount: 5,
+                    seatsPerRow: 5
+                })
+            });
+            hallId = data.id;
+        }
+
+        async function createMovie() {
+            const data = await api('/api/admin/movies', {
+                method: 'POST',
+                body: JSON.stringify({
+                    title: 'Inception',
+                    description: 'A mind-bending thriller',
+                    duration: 148
+                })
+            });
+            movieId = data.id;
+        }
+
+        async function createProjection() {
+            if (!movieId || !hallId) return show('Първо създай филм и зала');
+            const start = new Date();
+            start.setDate(start.getDate() + 1);
+            start.setMinutes(0, 0, 0);
+            const data = await api('/api/admin/projections', {
+                method: 'POST',
+                body: JSON.stringify({
+                    movieId: movieId,
+                    hallId: hallId,
+                    startTime: start.toISOString().slice(0, 19),
+                    basePrice: 12.50
+                })
+            });
+            projectionId = data.id;
+        }
+
+        async function listSeats() {
+            if (!hallId) return show('Първо създай зала');
+            await api('/api/halls/' + hallId + '/seats');
+        }
+
+        async function reserveSeat() {
+            if (!projectionId) return show('Първо създай прожекция');
+            const seats = await api('/api/halls/' + hallId + '/seats');
+            const firstSeatId = seats[0].id;
+            const tickets = await api('/api/tickets/reserve', {
+                method: 'POST',
+                body: JSON.stringify({
+                    projectionId: projectionId,
+                    seatIds: [firstSeatId],
+                    ticketType: 'STANDARD'
+                })
+            });
+            lastTicketIds = tickets.map(t => t.id);
+        }
+
+        async function payLast() {
+            if (!lastTicketIds.length) return show('Първо резервирай място');
+            await api('/api/tickets/pay', {
+                method: 'POST',
+                body: JSON.stringify({ ticketIds: lastTicketIds })
+            });
+        }
+
+        async function showReports() {
+            if (!projectionId) return show('Първо създай прожекция');
+            const revenue = await fetch('/api/admin/reports/revenue-by-movie', { credentials: 'same-origin' })
+                .then(r => r.json());
+            const occupancy = await fetch('/api/admin/reports/occupancy/' + projectionId, { credentials: 'same-origin' })
+                .then(r => r.json());
+            show({ revenue, occupancy });
+        }
+
+        async function getCinemas() { await api('/api/cinemas'); }
+        async function getMovies() { await api('/api/movies'); }
+    </script>
+</body>
+</html>

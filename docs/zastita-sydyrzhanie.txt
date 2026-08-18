@@ -1,0 +1,278 @@
+CENTERB|Професионална гимназия по компютърни науки и математически анализи
+CENTER|„Проф. Минко Балкански“ – Стара Загора
+CENTER|
+CENTERB|Теоретична писмена защита към практически проект по разработка на софтуер
+CENTER|
+CENTER|Тема на проекта:
+CENTERB|Enterprise система за резервация на билети за кино (CineReserve)
+CENTER|
+CENTER|Ученик: [Име Фамилия]
+CENTER|Клас: 11
+CENTER|Ръководител: [име и длъжност]
+CENTER|
+CENTER|Стара Загора
+CENTER|2026
+NP|
+TOC|
+H1|1. Увод
+P|Настоящата теоретична писмена защита документира практическия проект CineReserve — работеща уеб система за резервация и продажба на билети за кино, реализирана на Java със Spring Boot, Spring Security, Spring Data JPA и MySQL. Интерфейсът е статични HTML, CSS и JavaScript файлове, които самото Spring приложение сервира от src/main/resources/static. Проектът не използва React, шаблонни двигатели от страна на сървъра или отделен Node.js фронтенд.
+P|Актуалността на темата следва от реалния начин, по който кината продават места: програма по градове и кина, схема на залата, кратко задържане на мястото до плащане и отчет към администрацията. Системата покрива три роли, които съществуват в кода: ADMIN, CASHIER и CLIENT. Клиентът резервира места и плаща от вътрешен баланс. Касиерът продава билети без теглене от баланс и продава артикули от бара с привързване към кино. Администраторът управлява кина, зали, филми, прожекции, продукти, персонал и отчети.
+P|Цел на проекта: да се реализира работеща клиент–сървър система за резервация на кинобилети с избор на място, ролеви достъп и отчети, изградена върху Java Spring Boot и MySQL.
+P|Задачите, които системата изпълнява в кода, са следните. Първо, да се моделират кина, зали, места, филми, прожекции, билети, потребители, продукти и продажби на артикули като JPA сущности към MySQL. Второ, да се осигури автентификация чрез формуляр /login и оторизация по роли в SecurityConfig. Трето, да се реализира бизнес процесът резервация PENDING за 5 минути, плащане PAID и отказ CANCELLED при изтичане, с уникалност на двойката прожекция–място и optimistic locking върху билета. Четвърто, да се изградят потребителски екрани за клиент, касиер и администратор. Пето, да се водят отчети за приходи по филм, заетост на зала и продажби на артикули, филтрирани по кино. Шесто, да се поддържа вътрешен баланс на клиента за плащане на билети и зареждане на сума.
+P|Обект на разработката е информационната система CineReserve. Предмет на разработката са архитектурата на слоевете (controller, service, repository, model), правилата за продажба на места и артикули и ролевият достъп, както са записани в изходния код.
+P|Структурата на писмената защита следва методическите указания. Глава 2 представя предметната област и използвания стек. Глава 3 анализира изискванията, ролите, архитектурата и таблиците. Глава 4 описва реализацията по модули и ключови решения. Глава 5 описва ръчното тестване и ограниченията, които реално съществуват в кода. Заключението съпоставя задачите с постигнатото.
+P|Документът не описва функции, които отсъстват от хранилището. Ако даден търговски продукт има мобилно приложение, електронна поща или платежен шлюз, това не се пренася механично върху CineReserve. Всички твърдения за поведение могат да се проверят в посочения клас или HTML файл.
+H1|2. Теоретична част
+H2|2.1. Конфигурация и сигурност, както са в кода
+P|application.properties съдържа името ticket-system, JDBC URL към cinema_db, username и password за MySQL, ddl-auto=update, show-sql=true, format_sql=true, database-platform MySQLDialect и server.port=8080. Няма профили dev/prod, няма външен application-prod.properties.
+P|CustomUserDetailsService имплементира UserDetailsService: търси User по username, хвърля грешка ако го няма, и подава BCrypt паролата плюс granted authority ROLE_ и Role.name(). Spring Security сравнява въведената парола с хеша. Няма „запомни ме“ и няма двуфакторно удостоверяване в кода.
+P|SecurityFilterChain изключва CSRF, после нарежда requestMatchers от по-конкретни към по-общи. Статичните пътища са permitAll. /api/auth/** е permitAll, за да мине регистрацията без сесия. GET към movies, cinemas, projections, halls и products е permitAll. HTML на админ изисква hasRole ADMIN. /api/admin/** също. HTML на касата и /api/cashier/** изискват CASHIER или ADMIN. Клиентските HTML изискват CLIENT, CASHIER или ADMIN, затова админ и касиер могат да отворят и клиентските екрани. Всичко останало под /api/** иска автентификация. anyRequest authenticated затваря неизвестни пътища.
+P|Формулярният вход ползва loginProcessingUrl /login, което е стандартното действие на HTML формата в index.html (method post, action /login). Полетата са name=username и name=password, както Spring Security очаква по подразбиране. Няма httpBasic в текущия SecurityConfig.
+P|Петте минути за PENDING са компромис, записан като константа, не като настройка в properties. Стойността не се чете от екрана и клиентът не може да я удължи с параметър. Изтичането се оценява със LocalDateTime.now() на сървъра.
+P|Валутата в интерфейса и в съобщенията е евро (€). Цените са BigDecimal с precision 10 scale 2. Няма валутен курс и няма втора валута в модела.
+P|Групирането на програмата в js/program.js сортира прожекциите по startTime, после за всеки филм прави Map от ключ city|cinemaName|hallName|format|basePrice към списък часове. Това е причината няколко часа на една и съща зала и формат да се показват като бутони на един ред, а не като отделни карти. Алгоритъмът е само за изглед; сървърът пази всяка прожекция като отделен ред в projections.
+P|Админ програмата (admin-program.html) и касиерската програма преизползват същата идея за списък, след което касата избира конкретна прожекция за продажба. Клиентската програма води към booking.html?projectionId=.
+H2|2.2. Същност на предметната област
+P|Система за резервация на кинобилети обслужва продажбата на конкретно място в конкретна зала за конкретна прожекция. За разлика от продажба на общ вход, тук мястото е ограничен ресурс: едно и също седалка не може да бъде платена два пъти за една прожекция. Затова в CineReserve таблицата tickets има уникално ограничение върху колоните projection_id и seat_id.
+P|Типичният процес има няколко стъпки. Първо се публикува програма: филм, зала, начален час, формат и базова цена. После зрителят вижда схема на местата. Свободно място може да бъде задържано за кратко, докато трае плащането, за да не го вземе друг. В кода това е статус PENDING със срок reservedUntil от пет минути (константа RESERVATION_MINUTES в TicketService). След успешно плащане билетът става PAID и получава uniqueCode. Ако срокът изтече, статусът се сменя на CANCELLED и мястото отново е свободно.
+P|Кината работят като мрежа от обекти в различни градове. Затова Cinema пази name, city и address, Hall сочи към Cinema, а Seat сочи към Hall с ред и номер. Прожекцията свързва Movie и Hall с startTime, basePrice и format TWO_D или THREE_D.
+P|Освен билети, кино обектът продава храни и напитки. В системата това са Product с категории POPCORN, DRINK и NACHOS и ProductSale, която записва количество, цена, касиер, кино, евентуален сос и момент на продажба. Начосите изискват сос CHEDDAR или BBQ.
+P|Отчетността е част от предметната област. Администраторът трябва да види кой филм какви приходи е донесъл в избрано кино, каква е заетостта на конкретна прожекция и какви артикули са продадени. Тези три справки са реализирани в ReportService и ReportController.
+H2|2.3. Сходни решения
+P|На пазара съществуват готови платформи за продажба на кинобилети. По-долу са сравнени три известни подхода с това, което CineReserve реално прави, без да се приписват на проекта функции, които ги няма в кода.
+P|Cinema City и сходни вериги предлагат публична програма по град и кино, схема на залата и плащане с карта. CineReserve също групира програмата по град, кино, зала и формат (js/program.js) и има схема на местата (booking.html и касата). Плащането при клиента обаче не минава през външен платежен оператор, а през полето balance в таблицата users. При касата плащането е в брой или с визуализация на ПОС в интерфейса, без реална картова интеграция.
+P|Eventim и подобни билетни платформи продават събития с електронни билети и често изпращат код по електронна поща. CineReserve генерира uniqueCode чак при статус PAID, във формат с ред, място, цена и идентификатор на билета. Няма модул за имейл, SMS или PDF прикачен файл.
+P|Локални касови системи в кина държат продажбите на касата и склада за бар. CineReserve има касиерски модул за директна продажба на места (POST /api/cashier/sell) и пакетна продажба на продукти (POST /api/cashier/products/sell-batch) с избор на град и кино. Няма складови наличности, доставчици или инвентаризация.
+P|Изводът е, че проектът е учебна, пълноценно работеща система за резервация и каса, а не търговски продукт с платежен шлюз и външни интеграции. Сравнението е нужно, за да се очертае обхватът на кода, а не за да се твърди паритет с търговските системи.
+H2|2.4. Технологичен стек
+P|Езикът е Java 17, зададен в pom.xml чрез свойството java.version. Родителският артефакт е spring-boot-starter-parent версия 4.1.0. Зависимостите в проекта са spring-boot-starter-webmvc, spring-boot-starter-data-jpa, spring-boot-starter-security и mysql-connector-j с обхват runtime. За тестове са включени съответните starter-*-test артефакти. В src/test има само TicketSystemApplicationTests с метод contextLoads.
+P|Spring Boot стартира вграден Tomcat на порт 8080 (server.port в application.properties). REST контролерите са класове с @RestController и базов път /api. JSON се сериализира по подразбиране от Spring. Паролата в User е анотирана с @JsonIgnore, за да не излиза в отговорите.
+P|Достъпът до MySQL е през JDBC URL jdbc:mysql://localhost:3306/cinema_db с параметри createDatabaseIfNotExist=true, useSSL=false, allowPublicKeyRetrieval=true и serverTimezone=UTC. Потребителят и паролата се четат от application.properties. Hibernate работи с ddl-auto=update, тоест при старт допълва липсващи таблици и колони според entity класовете. Диалектът е зададен като MySQLDialect.
+P|Персистенцията е Spring Data JPA. Всеки агрегат има интерфейс repository, който разширява JpaRepository. Примери: UserRepository, CinemaRepository, HallRepository, SeatRepository, MovieRepository, ProjectionRepository, TicketRepository, ProductRepository, ProductSaleRepository. Това са деветте JPA интерфейса, които приложението сканира при старт.
+P|Сигурността е Spring Security. PasswordEncoder е BCryptPasswordEncoder. Входът е form login към /login, страница за вход /index.html, неуспех /index.html?error=1. Успехът се обработва от RoleBasedAuthSuccessHandler: ROLE_ADMIN отива на /admin.html?login=ok, ROLE_CASHIER на /cashier.html?login=ok, ROLE_CLIENT на /client.html?login=ok. Изходът е /logout със invalidateHttpSession, clearAuthentication и изтриване на бисквитката JSESSIONID.
+P|Архитектурният стил е слоеста монолитна уеб архитектура с REST JSON API и статичен клиент. Няма отделен фронтенд сървър. Браузърът вика fetch към същите origin адреси с credentials: same-origin, както е в js/api.js.
+P|Представянето на датите в API-то е низове от вида 2026-08-06T17:00:00. Клиентският код ги чете с регулярни изрази в splitDateTime, без да ги превръща през часова зона на браузъра, за да се покаже същият час, който администраторът е въвел.
+H2|2.5. Обосновка на избраните технологии
+P|Java 17 и Spring Boot са избрани, защото темата е зададена в стека Java (Spring Boot) и защото inversion of control позволява контролерите да получават service класовете чрез конструктор, без ръчно създаване на зависимости.
+P|Spring Data JPA намалява SQL шаблонния код. Сложните правила обаче не са в заявки, а в service слоя: TicketService съдържа резервацията, плащането, студентската цена и почистването на изтекли PENDING записи. Това разделяне съответства на MVC/слоеста архитектура: контролерът приема HTTP, услугата прилага правила, хранилището чете и пише.
+P|MySQL е релационна база и пасва на твърдите връзки кино–зала–място–прожекция–билет. Уникалният ключ (projection_id, seat_id) и външните ключове се изразяват директно. Не е използвана документна база, защото моделът е нормализиран и табличен.
+P|Spring Security е използван вместо собствена проверка на парола в всеки контролер. Правилата са декларативни в SecurityFilterChain: публични GET към филми, кина, прожекции, зали и активни продукти; /api/admin/** само за ADMIN; /api/cashier/** за CASHIER и ADMIN; останалите /api/** изискват автентификация.
+P|Статичният HTML/JS клиент е избран съгласно забраната за React и сървърни шаблони. Всички екрани са отделни html файлове плюс общи скриптове api.js, nav.js, admin-layout.js и cashier-layout.js. Това държи фронтенда прозрачен за проверка: всяка страница вика конкретни REST пътища.
+P|BCrypt е използван, защото сурова парола не се записва. DataInitializer кодира admin123, cashier123 и client123 при първо създаване на потребителите. Минималната дължина при регистрация и смяна е 4 символа (AuthService и AccountService).
+H3|2.5.1. REST и JSON в този проект
+P|REST тук означава ресурси през HTTP методи, а не отделен микросървиз. Колекцията филми се чете с GET /api/movies, създава се с POST /api/admin/movies, обновява се с PUT /api/admin/movies/{id}, изтрива се с DELETE /api/admin/movies/{id}. Същият шаблон се повтаря за кина, продукти и прожекции. Резервацията не е класическо CRUD на билет от клиента, а команда POST /api/tickets/reserve, защото създаването има странични правила за заетост и срок.
+P|Тялото на заявките е JSON. DTO класовете (CinemaRequest, MovieRequest, ProjectionRequest, ReserveRequest, PayRequest, ProductSaleBatchRequest и други) приемат полетата от клиента. Entity класовете не се подават директно от браузъра за запис, освен където контролерът сам сглобява обект от request.
+P|Кодовете за отговор, които кодът използва съзнателно, са 201 Created при създаване на кино, зала, филм, прожекция, резервация и продажба, 204 при някои DELETE, 400 при BusinessException и 500 при необработена грешка. Неуспешният form login не е JSON, а пренасочване към index.html?error=1.
+H3|2.5.2. Слоеста архитектура и MVC
+P|Класическият MVC разделя вход, правила и данни. В Spring Boot контролерът е входът, услугата е правилата, репозиторито е данните. CineReserve спазва това: TicketController не смята студентска цена; това е TicketService. HallController не генерира места; това е HallService.create. ReportController само делегира към ReportService.
+P|Фронтендът повтаря същата идея на по-грубо ниво: html е изглед, js файлът е управление на събития, api.js е единственото място за fetch. Няма бизнес правило за 5 минути в JavaScript: съобщението „Имаш 5 минути“ е информативно, срокът се пази в reservedUntil на сървъра.
+H3|2.5.3. Релационен модел и JPA връзки
+P|Връзката @ManyToOne е използвана навсякъде, където много редове сочат към един: зала към кино, място към зала, прожекция към филм и зала, билет към прожекция, място и потребител, продажба към продукт, касиер и кино. Няма @ManyToMany. Междинна таблица за билет не е нужна, защото Ticket самият е връзката прожекция–място–купувач.
+P|Идентификаторите са Long с IDENTITY, тоест MySQL AUTO_INCREMENT. Това е достатъчно за единичен сървър. Няма UUID като първичен ключ на билета; уникалният четим код е отделна колона unique_code, която се пълни едва при PAID.
+H3|2.5.4. Optimistic locking
+P|При едновременен достъп има два учебни подхода: песимистично заключване на реда в базата и оптимистично с версия. CineReserve използва второто чрез @Version върху Ticket. Ако двама запишат един и същ билет, вторият commit хвърля ObjectOptimisticLockingFailureException. Услугата го превръща в същото съобщение, което се показва и при предварително заета седалка. Това не заменя уникалния ключ (projection_id, seat_id); двете работят заедно.
+H3|2.5.5. Сесия срещу токен
+P|Приложението не издава JWT. След POST /login контейнерът създава HTTP сесия и JSESSIONID. JS заявките пращат credentials: same-origin, за да върви бисквитката. Logout унищожава сесията. Този модел е стандартен за сървърно рендерирани и класически уеб приложения и съвпада с това, че фронтенд и бекенд са на един origin порт 8080.
+H1|3. Анализ и проектиране на системата
+H2|3.1. Функционални изисквания
+P|Изискванията по-долу са извлечени само от контролери, услуги и статични страници. Не са включени идеи, които не съществуват в кода.
+TC|Таблица 1. Функционални изисквания, покрити в кода
+TB|
+TR|Код|Изискване|Къде е реализирано
+TR|F1|Регистрация на клиент с потребителско име и парола, начален баланс 20.00 €|POST /api/auth/register, AuthService.registerClient
+TR|F2|Вход с формуляр и пренасочване според роля|POST /login, RoleBasedAuthSuccessHandler
+TR|F3|Изход с унищожаване на сесията|/logout
+TR|F4|Публична програма без вход: филми и прожекции|GET /api/movies, /api/projections, index.html, js/program.js
+TR|F5|Админ създава, редактира и изтрива кина|CinemaController, admin-cinemas.html
+TR|F6|Админ създава зала и системата генерира местата (редове × места на ред)|HallService.create, Seat записи
+TR|F7|Админ създава и изтрива филми|MovieController, admin-movies.html
+TR|F8|Админ създава прожекция за една или много зали, формат 2D/3D, бъдещ час, положителна цена|ProjectionService.create / createMany
+TR|F9|Избор на град, после кина в града, после зали, с възможност за всички кина/зали|admin-movies.js
+TR|F10|Клиент вижда схема на местата и заетите PAID и валидни PENDING|GET occupied-seats, booking.html
+TR|F11|Клиент резервира места за 5 минути (PENDING)|POST /api/tickets/reserve
+TR|F12|Клиент плаща от баланс (PENDING → PAID) и получава uniqueCode|POST /api/tickets/pay, AccountService.charge
+TR|F13|Студентска цена = 80% от basePrice|TicketService.calculatePrice, TicketType.STUDENT
+TR|F14|Касиер продава места директно като платени, без баланс|POST /api/cashier/sell
+TR|F15|Клиент зарежда баланс с положителна сума|POST /api/account/top-up
+TR|F16|Клиент сменя потребителско име и парола след проверка на текущата парола|PUT /api/account/profile
+TR|F17|Клиент вижда платените си билети|GET /api/tickets/my
+TR|F18|Админ управлява продукти; изтриването е деактивиране (active=false)|ProductService.delete
+TR|F19|Касиер продава артикули към избрано кино, вкл. пакетно, с касова бележка в UI|sell / sell-batch, cashier-bar.js
+TR|F20|Админ създава ADMIN и CASHIER и изтрива акаунти|AuthController, admin-staff.html
+TR|F21|Отчет приходи по филм за кино; заетост за прожекция; продажби на артикули за кино|ReportController
+TR|F22|Списък на персонала и клиентите в три колони|GET /api/admin/staff използва listAllUsers в страницата за акаунти
+TE|
+P|Регистрацията създава само роля CLIENT. Администраторски и касиерски акаунти се създават от вече влязъл ADMIN чрез POST /api/admin/staff с роля ADMIN или CASHIER и баланс 0. При изтриване на потребител се изтриват билетите му и продажбите, в които е soldBy, след което се изтрива редът в users. Ако изтрие себе си, отговорът съдържа selfDeleted=true и интерфейсът го разлогова.
+H2|3.2. Нефункционални изисквания
+P|Сигурност на паролите: съхранение с BCrypt, паролата не се връща в JSON. Уникалност на username. Сесия чрез контейнера на Spring Security и бисквитка JSESSIONID.
+P|Ролеви достъп до HTML и API, описан в SecurityConfig. Публични са началната страница, статичните css/js/images, /api/auth/** и GET към movies, cinemas, projections, halls и /api/products. CSRF защитата е изрично изключена (csrf.disable()). Това е решение в кода и се отчита като ограничение в глава 5, а не като допълнителна функция.
+P|Конкурентен достъп до места: @Version върху Ticket и прихващане на ObjectOptimisticLockingFailureException с съобщение „Мястото току-що беше резервирано от друг“. Допълнително unique constraint върху projection_id и seat_id.
+P|Валидации в service слоя чрез BusinessException, върнати като HTTP 400 с JSON поле message от GlobalExceptionHandler. Примери: празен списък места, цена неположителна, час в миналото, недостатъчен баланс, неактивен продукт, липсващо кино при продажба на бар, невалиден сос.
+P|Наличност и среда: локален сървър, порт 8080, MySQL на localhost:3306. Няма конфигурация за клъстер, HTTPS терминация или външен брокер на съобщения.
+P|Използваемост, която е в кода, а не пожелание: 24-часов час в админ формата за прожекции, toast съобщения при грешен вход, филтриране град→кино в отчетите и на касата за бара, меко навигиране в админ страниците чрез admin-layout.js.
+H2|3.3. Роли и права
+P|Enum Role съдържа точно три стойности: ADMIN, CASHIER, CLIENT. CustomUserDetailsService зарежда потребителя по username и подава authority ROLE_ плюс името на ролята.
+TC|Таблица 2. Роли и достъп според SecurityConfig
+TB|
+TR|Роля|HTML страници|Характерни API
+TR|Без вход|index.html, публични GET за програма и продукти|GET /api/movies, /cinemas, /projections, /halls, /products; POST /api/auth/register
+TR|CLIENT|client.html, booking.html, account.html, tickets.html, balance.html, menu.html|reserve, pay (с баланс), /api/tickets/my, /api/account/**
+TR|CASHIER|cashier.html, cashier-program.html, cashier-bar.html плюс клиентските страници|POST /api/cashier/sell, /api/cashier/products/sell, /sell-batch
+TR|ADMIN|admin.html и всички admin-*.html, плюс каса и клиент| /api/admin/** и касиерските пътища
+TE|
+P|AccountService.updateProfile и topUp отказват операция, ако ролята не е CLIENT. Касиерската продажба на билети вика payTickets с chargeBalance=false, следователно не пипа users.balance.
+H2|3.4. Архитектура
+P|Приложението е един процес: TicketSystemApplication. Заявките влизат в Tomcat, минават през Spring Security филтъра, стигат до @RestController, после до @Service, после до JpaRepository и MySQL. Статичните файлове се връщат от resource handler на Spring Boot.
+P|Слоевете в пакета com.cinema са: config (SecurityConfig, DataInitializer, RoleBasedAuthSuccessHandler), controller, service, repository, model и model.enums, dto, exception, security. Няма отделен пакет за фронтенд на Java страна.
+F|Фигура 1. Слоеве на CineReserve: браузър (HTML/JS) → Spring Security → REST контролери → услуги → JPA → MySQL. Статичните ресурси се сервират от същия порт 8080.
+P|На мястото под този надпис се поставя схема или екранна снимка от работещото приложение, без елементи, които ги няма в кода.
+P|Клиентът не държи бизнес правила за цена и заетост. Цената се смята в TicketService.calculatePrice. Заетите места се връщат от getOccupiedSeatIds след cleanupExpiredPending. Браузърът само рисува схемата и изпраща списък от seatIds.
+P|Админ навигацията е SPA-подобна само на ниво смяна на HTML фрагмент: admin-layout.js зарежда друга admin страница без презареждане на целия layout, но бизнесът пак е REST към същите контролери.
+H3|3.4.1. Поток на една заявка
+P|Пример: клиент натиска „Резервирай“. booking.js изпраща POST /api/tickets/reserve с JSON { projectionId, seatIds, ticketType }. Spring Security вижда автентифицирана сесия и роля, различна от анонимна. TicketController.reserve чете Authentication.getName() като username. TicketService.reserveSeats зарежда прожекцията, потребителя и местата, чисти изтекли PENDING, проверява заетост и зала, записва билети. Отговорът е 201 и масив от Ticket. JS запазва идентификаторите за следващото плащане. Нито една от тези стъпки не се изпълнява в браузъра като авторитет: сървърът може да откаже дори ако UI-ът е подвел потребителя.
+H3|3.4.2. Граница между публично и защитено
+P|GET към програмата е публичен, защото началната страница трябва да покаже филми без вход. POST към резервация не е публичен. GET /api/products е публичен за менюто, но POST към продажба е само каса. HTML файловете на админ не се сервират на клиент, защото matcher изисква ROLE_ADMIN; дори познаването на URL не е достатъчно без сесия с тази роля.
+H2|3.5. Модел на базата данни
+P|Таблиците се създават от Hibernate според анотациите. Имена: users, cinemas, halls, seats, movies, projections, tickets, products, product_sales.
+TC|Таблица 3. Основни таблици и връзки
+TB|
+TR|Таблица|Ключови полета|Връзки
+TR|users|id, username (unique), password, role, balance|билети като user; продажби като soldBy
+TR|cinemas|id, name, city, address|едно кино има много зали; продажбите на бар могат да сочат cinema_id
+TR|halls|id, name, cinema_id, rows_count, seats_per_row|много зали към едно кино
+TR|seats|id, hall_id, row_num, seat_num; unique (hall_id, row_num, seat_num)|много места към една зала
+TR|movies|id, title, description (до 2000), duration|
+TR|projections|id, movie_id, hall_id, start_time, base_price, format|филм и зала
+TR|tickets|id, projection_id, seat_id, user_id, status, price, unique_code, reserved_until, version; unique (projection_id, seat_id)|билет към прожекция, място и потребител
+TR|products|id, name, category, size_label, price, active, allows_sauce|
+TR|product_sales|id, product_id, sold_by_id, cinema_id (nullable), quantity, sauce, unit_price, total_price, sold_at|
+TE|
+P|Статусите на билет са PENDING, PAID, CANCELLED. Типовете билет при резервация са STANDARD и STUDENT; типът не се пази като колона в tickets, а се използва само за изчисление на price в момента на резервация. Форматът на прожекция се пази като enum TWO_D/THREE_D с JSON етикети 2D/3D.
+P|ProductSale.cinema е @ManyToOne без optional=false, колоната cinema_id може да е празна за стари записи. Новите продажби от бара изискват cinemaId. Отчетът productSales филтрира само редове с cinema != null и съвпадащо id.
+F|Фигура 2. ER връзки: Cinema 1–N Hall 1–N Seat; Movie 1–N Projection N–1 Hall; Projection 1–N Ticket N–1 Seat и N–1 User; Product 1–N ProductSale N–1 User (soldBy) и N–1 Cinema.
+P|Транзакциите са анотации @Transactional върху методите, които пишат няколко реда: reserveSeats, payTickets, sellAtCashier, HallService.create, ProductService.sellMany, AuthService.deleteUser. Ако генерацията на места се провали след записа на залата, транзакцията трябва да отмени и залата. Плащането таксува баланса преди да обходи билетите към PAID; при хвърлена грешка за недостатъчна сума не се стига до промяна на статуса, защото charge хвърля преди цикъла за PAID.
+P|Няма ръчно написани CREATE TABLE скриптове в проекта. Схемата живее в анотациите и в ddl-auto=update. Това е удобно за учебна разработка и е риск за производствена миграция; в кода няма Flyway или Liquibase.
+H2|3.6. Основни сценарии на употреба
+P|Сценарий „Клиент купува билет“. Актьор CLIENT. Влиза, отваря програмата, избира час, вижда схемата, маркира свободни места, избира STANDARD или STUDENT, натиска резервация. Сървърът създава PENDING билети за 5 минути. Клиентът натиска плащане. Ако балансът стига, билетите стават PAID и се показва код. Ако не стига, AccountService.charge хвърля BusinessException с нужната и наличната сума.
+P|Сценарий „Касиер продава място“. Актьор CASHIER. Избира кино, филм, прожекция, места и тип билет, потвърждава. sellAtCashier прави reserveSeats с потребителското име на касиера и веднага payTickets без таксуване на баланс.
+P|Сценарий „Касиер продава артикули“. Избира град и кино, добавя количества, при начос избира сос, плаща в брой или с екран ПОС, получава бележка. Заявката носи cinemaId и списък items.
+P|Сценарий „Админ пуска прожекция на много зали“. Избира филм, град, едно или повече кина, една или повече зали, дата, час, цена, 2D или 3D. POST /api/admin/projections с hallIds създава по една прожекция на зала през createMany. Часът трябва да е в бъдещето.
+P|Сценарий „Админ гледа отчет“. В отчетите билетите и артикулите са разделени. И при двете се избира град, после кино. Приходите по филм идват само от PAID билети на прожекции в това кино. Заетостта се смята за избрана прожекция: платени, PENDING, свободни, проценти.
+H1|4. Реализация
+H2|4.1. Среда за разработка
+P|Разработката е в Cursor върху Windows. Компилацията е Maven Wrapper (mvnw.cmd), без глобално инсталиран Maven. JDK е 17 (Temurin). Базата е MySQL 8, схема cinema_db. Версиите на Spring Boot и Java са тези в pom.xml: 4.1.0 и 17. Система за контрол на версиите не е използвана в работната среда (Git не е наличен на машината на разработка). Предаването е чрез архив на изходния код.
+P|Стартиране: задава се JAVA_HOME към JDK 17 и се изпълнява mvnw.cmd spring-boot:run в папката на проекта. Приложението слуша на http://localhost:8080. Първият старт сваля зависимости и Hibernate обновява схемата.
+P|При старт DataInitializer създава липсващите потребители admin/admin123 (ADMIN, баланс 1000.00), cashier/cashier123 (CASHIER, 0) и client/client123 (CLIENT, 50.00), както и началните продукти за пуканки, напитки и начос, ако ги няма. Нова регистрация на клиент не използва 50.00, а 20.00.
+P|Сидираните продукти, ако липсват, са: Пуканки малка 4.50, средна 6.50, голяма 8.50 без сос; Кола, Спрайт и Фанта по 500мл на 3.50; Начос малък 7.00 и голям 9.50 с allowsSauce=true. Това е целият начален каталог в DataInitializer, не се сидират кина и филми.
+P|Списък на HTML екраните в static, които SecurityConfig наименува изрично: index.html (публичен вход), admin.html, admin-cinemas.html, admin-movies.html, admin-program.html, admin-bar.html, admin-staff.html, admin-reports.html, cashier.html, cashier-program.html, cashier-bar.html, client.html, booking.html, account.html, tickets.html, balance.html, menu.html, test-api.html. Има и css/styles.css и js модулите, изброени в съответните страници.
+H3|4.1.1. Клиентски скриптове
+P|js/api.js съдържа fetch обвивката api(), показване на съобщения showMsg, парсване на дати splitDateTime, форматиране на 24-часов час, етикети 2D/3D, uniqueCities и cinemasForCity. Всички страници, които говорят със сървъра, минават през тази функция, за да се пращат JSON и credentials.
+P|js/nav.js строи горната лента и чете /api/account/me. js/landing.js обработва регистрация, грешен вход и успешен вход на index.html. js/program.js групира прожекциите по филм, после по ключ град|кино|зала|формат|цена, и рисува часовете. js/booking.js управлява избора на места и двете заявки reserve и pay. js/client.js е клиентската програма. js/admin-layout.js монтира страничното меню на админа и мекото преминаване между страници. js/admin-cinemas.js, admin-movies.js, admin-staff.js, admin-reports.js, admin.js покриват съответните екрани. js/cashier-layout.js, cashier.js, cashier-program.js, cashier-bar.js покриват касата. Няма TypeScript и няма бандлър: файловете се зареждат директно от браузъра.
+P|css/styles.css държи тъмната тема, червения акцент --accent #e31837, таблиците за отчети, схемата на местата, касовата бележка и трите колони за избор на място при прожекция. Шрифтът на админ поздрава е Playfair Display, зададен в страницата на таблото, не в Java.
+H2|4.2. Модули на системата
+H3|4.2.1. Автентификация и акаунти
+P|Публичната страница index.html съдържа форма POST /login и форма за регистрация, която вика POST /api/auth/register. Грешният вход се сигнализира в интерфейса. След успех пренасочването е по роля. js/nav.js чете GET /api/account/me за поздрав и меню, вместо да се доверява на остаряло sessionStorage.
+P|Клиентът редактира профил в account.html. Сървърът изисква currentPassword. Само CLIENT може да ползва този екран. balance.html вика top-up. tickets.html показва само PAID билети на текущия потребител.
+H3|4.2.2. Кина, зали и места
+P|Админ страницата admin-cinemas.html създава кино с име, град и адрес. Градът се избира от вече съществуващите градове или се въвежда като нов, за да не се разпаднат „Sofia“ и объркано изписване като отделни градове. CinemaService.resolveCity нормализира интервали и преизползва съществуващ запис при съвпадение без значение на главни букви.
+P|При създаване на зала HallService.create записва залата и в цикъл създава Seat за всеки ред и всеки номер. Броят места е rowsCount * seatsPerRow. Уникалността (hall_id, row_num, seat_num) пази дублиране в една зала.
+H3|4.2.3. Филми и прожекции
+P|Филмът има заглавие, описание и продължителност в минути. Прожекцията не пази крайния час; използва се само startTime. Форматът се подава като 2D или 3D и се мапва от ProjectionFormat.from. createMany обхожда hallIds и вика create за всяка зала със същия филм, час, цена и формат.
+P|Интерфейсът за нова прожекция е три колони: град, кина, зали. Залите се показват групирани по кино. Резюмето под формата изброява избраните зали преди запис.
+H3|4.2.4. Резервации и каса за билети
+P|booking.html зарежда прожекцията, баланса и местата. Заетите се оцветяват отделно от избраните. След резервация бутонът за плащане се отключва с идентификаторите на PENDING билетите. Касата ползва същата схема, но крайната операция е /api/cashier/sell.
+P|Ако за мястото вече има CANCELLED билет, TicketService преизползва същия ред вместо да наруши уникалния ключ. Ако статусът е PAID или валиден PENDING, се връща грешка, че мястото е заето.
+H3|4.2.5. Бар и продукти
+P|Продуктите имат категория, размер, цена, флаг active и allowsSauce. Изтриването от админ не маха реда, а слага active=false. Публичният GET /api/products връща само активните. Касиерският бар изисква кино преди плащане. Сос се изисква само ако продуктът позволява сос; за начос validate принудително включва allowsSauce.
+H3|4.2.6. Отчети
+P|admin-reports.html разделя билети и артикули. И двете секции чакат избор на град и кино. revenueByMovie събира PAID билети, чиято прожекция е в зала на избраното кино, и връща movieTitle, tickets, revenue. hallOccupancy чисти изтекли PENDING, брои уникални места по статус и смята soldPercent и occupancyPercent с закръгляне HALF_UP до два знака. productSales групира по продукт, категория и касиер и връща детайлен журнал.
+H2|4.3. Ключова бизнес логика
+P|Резервацията е критичният алгоритъм. По-долу е съкратен откъс от TicketService — само ключовите проверки, без целия метод.
+CB|
+C|@Transactional
+C|public List<Ticket> reserveSeats(...) {
+C|    cleanupExpiredPending(projectionId);
+C|    Set<Long> occupied = getOccupiedSeatIds(projectionId);
+C|    BigDecimal price = calculatePrice(projection.getBasePrice(), ticketType);
+C|    LocalDateTime reservedUntil = LocalDateTime.now().plusMinutes(5);
+C|    for (Long seatId : seatIds) {
+C|        if (occupied.contains(seatId)) {
+C|            throw new BusinessException("Мястото току-що беше резервирано от друг");
+C|        }
+C|        // запис PENDING + reservedUntil
+C|    }
+C|}
+CE|
+P|Плащането проверява собственика на билета, статуса PENDING и дали reservedUntil не е минало. При изтекъл срок записът става CANCELLED и се връща съобщение да се резервира отново. При chargeBalance=true се вика accountService.charge преди прехода към PAID. Кодът на билета се строи в buildReadableCode.
+P|Студентската отстъпка е константа STUDENT_DISCOUNT = 0.80, тоест 20% намаление спрямо basePrice. STANDARD връща basePrice със скала 2.
+P|Почистването cleanupExpiredPending търси всички PENDING с reservedUntil преди текущия момент и ги маркира CANCELLED. Вика се преди четене на заети места и преди резервация, както и в отчета за заетост.
+H3|4.3.1. Формули в отчета за заетост
+P|Нека N е броят записи в seats за залата на прожекцията. Нека P е броят уникални seat_id със статус PAID. Нека W е броят уникални seat_id със статус PENDING, които не са вече в P. Заети = P + W. Свободни = max(0, N − заети). Процент продадени = 100 * P / N, закръглен до два знака HALF_UP. Процент заети = 100 * (P+W) / N при N > 0, иначе 0. Тези величини се връщат като totalSeats, paidSeats, pendingSeats, occupiedSeats, freeSeats, soldPercent, occupancyPercent заедно с име на зала, заглавие на филм и startTime.
+H3|4.3.2. Генерация на места
+P|HallService.create приема rowsCount и seatsPerRow, и двете трябва да са положителни. След запис на залата двойният цикъл създава Seat с rowNum от 1 до rowsCount и seatNum от 1 до seatsPerRow. Няма пропуск в номерацията и няма буквени редове: редът е цяло число. Схемата на фронтенда реди тези числа като мрежа.
+H3|4.3.3. Каталог на REST пътищата
+P|AuthController: POST /api/auth/register; GET /api/admin/staff; POST /api/admin/staff; DELETE /api/admin/staff/{id}. AccountController: GET /api/account/me; PUT /api/account/profile; POST /api/account/top-up. CinemaController: GET /api/cinemas, GET /api/cinemas/{id}, POST/PUT/DELETE под /api/admin/cinemas. HallController: GET /api/halls, GET /api/halls/{id}, GET /api/cinemas/{cinemaId}/halls, GET /api/halls/{id}/seats, POST /api/admin/halls, DELETE /api/admin/halls/{id}. MovieController: GET /api/movies, GET /api/movies/{id}, POST/PUT/DELETE под /api/admin/movies. ProjectionController: GET /api/projections, GET /api/projections/{id}, GET /api/movies/{movieId}/projections, POST /api/admin/projections, DELETE /api/admin/projections/{id}. TicketController: GET occupied-seats, GET tickets по прожекция, POST reserve, POST pay, POST cashier/sell, GET /api/tickets/my. ProductController: GET /api/products, GET /api/admin/products, POST/PUT/DELETE админ продукти, POST cashier sell и sell-batch. ReportController: GET revenue-by-movie, occupancy/{projectionId}, product-sales, всички с префикс /api/admin/reports.
+P|Този каталог е пълен спрямо анотациите @GetMapping/@PostMapping/@PutMapping/@DeleteMapping в изброените контролери. Няма GraphQL, няма WebSocket, няма отделен /api/v2.
+H2|4.4. Нефункционални решения в кода
+P|Ролевият достъп е в един SecurityFilterChain. Няма отделни JWT токени: разчита се на сесия. Това е по-просто за браузърния клиент с credentials same-origin.
+P|Optimistic locking е поле version в Ticket. При конфликт потребителят вижда същото бизнес съобщение, както при вече заето място.
+P|Валидациите не са Bean Validation анотации върху DTO, а явни if в услугите и BusinessException. GlobalExceptionHandler връща 400 за бизнес грешки и 500 за останалите, с текст „Възникна грешка: “ плюс съобщението.
+P|CSRF е изключен. За учебна локална система това опростява fetch POST заявките, но не трябва да се представя като завършена защита срещу CSRF в интернет.
+F|Фигура 3. Екран за вход и регистрация (index.html) на работещото приложение.
+F|Фигура 4. Клиентска програма, групирана по град, кино, зала и формат.
+F|Фигура 5. Схема на местата при резервация.
+F|Фигура 6. Админ форма за нова прожекция: град, кина, зали.
+F|Фигура 7. Отчети с отделни панели за билети и артикули.
+F|Фигура 8. Касиерски бар с избор на кино и бележка.
+H1|5. Тестване, резултати и демонстрация
+P|Автоматизираните тестове в проекта са един метод contextLoads в TicketSystemApplicationTests, който вдига Spring контекста. Няма отделни unit тестове за TicketService или контролерите. Проверката на поведението е ръчна през браузъра и през test-api.html за последователни REST стъпки.
+P|Подходът е ръчен сценариен тест с трите сидирани акаунта и с новорегистриран клиент. Очакваните резултати са съобщенията и статусите, които услугите реално връщат.
+TC|Таблица 4. Примерни тестови случаи според реалното поведение
+TB|
+TR|№|Стъпки|Очаквано|Получено при ръчен тест
+TR|T1|Старт с JDK 17 и MySQL|Started TicketSystemApplication, порт 8080|Успешен старт
+TR|T2|Регистрация с парола под 4 символа|BusinessException, 400|Отказ
+TR|T3|Регистрация с заето име|„Това потребителско име вече е заето“|Отказ
+TR|T4|Вход admin/admin123|пренасочване към admin.html|Успех
+TR|T5|Вход с грешна парола|index.html?error=1 и червен toast|Успех
+TR|T6|Създаване на зала 5×8|40 записа в seats|Успех
+TR|T7|Прожекция с минал час|„Началният час трябва да е в бъдещето“|Отказ
+TR|T8|Резервация на свободно място|PENDING, 5 минути|Успех
+TR|T9|Втори клиент, същото място докато е PENDING|заето / конфликт|Отказ
+TR|T10|Плащане с недостатъчен баланс|съобщение с нужни и налични €|Отказ, остава PENDING до изтичане
+TR|T11|Плащане с достатъчен баланс|PAID, uniqueCode, намален баланс|Успех
+TR|T12|Изчакване над 5 мин без плащане|CANCELLED, мястото свободно|Успех
+TR|T13|Касиер sell|PAID без промяна на касиерския баланс|Успех
+TR|T14|Бар без избрано кино|„Избери кино за продажбата“|Отказ
+TR|T15|Начос без сос|искане за CHEDDAR или BBQ|Отказ
+TR|T16|Отчет билети след град и кино|редове само за PAID в това кино|Успех
+TR|T17|Изтриване на продукт|active=false, не се вижда в публичния списък|Успех
+TR|T18|Изтриване на собствен админ акаунт|selfDeleted, изход|Успех
+TE|
+P|Демонстрацията на системата е самото работещо приложение на http://localhost:8080. Екранните снимки към фигурите се поставят от работещата инстанция; в текста не се описват функции, които екранът няма.
+P|Ред на демонстрация, който следва реалните екрани. Първо се отваря index.html и се показва публичната програма, ако има прожекции. Второ се влиза като admin и се минава през страничното меню: табло, кина и зали, филми и прожекции, програма, бар, персонал, отчети. Трето се създава кино в съществуващ град, зала с автоматични места, филм и прожекция чрез трите стъпки град–кино–зала. Четвърто се влиза като client, зарежда се баланс, резервира се място и се плаща. Пето се влиза като cashier, продава се билет и се продава артикул към същото кино. Шесто в отчетите се избира същият град и кино и се проверява, че платеният билет и продажбата на бара се виждат в съответните таблици.
+P|test-api.html остава като лабораторен екран за поредни REST бутони. Той не е част от публичния потребителски път, но е защитен като клиентска страница и служи за проверка на API без админ формите.
+P|Известни ограничения, които са в кода, а не хипотетични. Няма HTTPS конфигурация. CSRF е изключен. Няма имейл с билет. Няма външно картово плащане; клиентът плаща само от balance, касата имитира ПОС визуално. Типът STANDARD/STUDENT не се записва в билета, записва се само изчислената цена. Стари product_sales без cinema_id не влизат в отчета по кино. Няма складова наличност на пуканки и напитки. Няма автоматичен scheduler: изтекли PENDING се чистят при следваща операция върху прожекцията. Git не е използван. Автоматичните тестове не покриват бизнес правилата.
+P|Възможни разширения, които не са направени: включване на CSRF токени, реален платежен доставчик, изпращане на кода по поща, фонова задача за expired PENDING, unit тестове върху TicketService, запис на TicketType в таблицата tickets.
+H1|6. Заключение
+P|Поставената цел е изпълнена: налице е работеща система CineReserve с три роли, схема на залата, петминутно задържане, плащане от баланс, каса, бар и отчети върху Java Spring Boot и MySQL. Задачите от увода се съпоставят с кода така: моделът е деветте entity и съответните таблици; сигурността е SecurityConfig и BCrypt; процесът на билета е TicketService; интерфейсите са статичните HTML страници; отчетите са ReportService; балансът е AccountService.
+P|Личен извод от реализацията е, че най-критичната част не е екранът, а правилото едно място–една прожекция заедно със срока PENDING. Без unique constraint, без почистване на изтекли резервации и без проверка на баланса плащането би дало неверни продажби. Отделянето на касиерската продажба (без баланс) от клиентската (с баланс) е същото ядро, извикано с различен флаг chargeBalance.
+P|Втори извод е, че ролите трябва да се налагат и в URL, и в услугата. HTML страницата admin-reports.html е защитена с hasRole ADMIN, а API пътят /api/admin/reports също. Профилът се сменя само за CLIENT дори ако заявката е автентифицирана.
+P|Насоките за бъдещо развитие съвпадат с ограниченията: тестове върху TicketService, CSRF, реално плащане, фоново почистване на PENDING и по-строга нормализация на градовете при създаване на кино. Тези неща не са част от текущия код и не се отчитат като готови.
+P|Писмената защита не преразказва всеки файл, а фиксира решенията, които действително стоят в хранилището: слоеве, роли, статуси на билет, отчети по кино и статичен клиент към REST.
+H1|Използвана литература
+P|[1] Spring Boot Documentation. Spring Boot 4.1. Official documentation. https://docs.spring.io/spring-boot/documentation.html (последен достъп: 18.08.2026).
+P|[2] Spring Security Reference. Form login, SecurityFilterChain, PasswordEncoder. https://docs.spring.io/spring-security/reference/ (последен достъп: 18.08.2026).
+P|[3] Spring Data JPA. Repositories and JPA. https://docs.spring.io/spring-data/jpa/reference/ (последен достъп: 18.08.2026).
+P|[4] Jakarta Persistence API. Entity, relationships, optimistic locking (@Version). https://jakarta.ee/specifications/persistence/ (последен достъп: 18.08.2026).
+P|[5] Hibernate ORM Documentation. Schema update and MySQL dialect. https://hibernate.org/orm/documentation/ (последен достъп: 18.08.2026).
+P|[6] MySQL 8.0 Reference Manual. https://dev.mysql.com/doc/refman/8.0/en/ (последен достъп: 18.08.2026).
+P|[7] Oracle. Java 17 Documentation. https://docs.oracle.com/en/java/javase/17/ (последен достъп: 18.08.2026).
+P|[8] IETF. HTTP Semantics, RFC 9110. https://www.rfc-editor.org/rfc/rfc9110 (последен достъп: 18.08.2026).
+P|[9] MDN Web Docs. Fetch API, credentials. https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API (последен достъп: 18.08.2026).
+P|[10] Provos, N., Mazières, D. A Future-Adaptable Password Scheme (Bcrypt). USENIX, 1999.
+H1|Приложения
+P|Приложение А. Изходен код. Пълният код е в архива на проекта (папка ticket-system), а не в основния текст. Ключови пакети: com.cinema.controller, com.cinema.service, com.cinema.model, com.cinema.config, static HTML/JS.
+P|Приложение Б. Инструкции за стартиране. Файлът КАК-ДА-ПУСНА.txt в корена на проекта описва Java 17, MySQL, application.properties и командата mvnw.cmd spring-boot:run.
+P|Приложение В. Допълнителни екранни снимки. Тук се поставят четливи снимки от работещото приложение към фигурите в глави 3 и 4, без бели полета около прозореца.
+P|Приложение Г. Списък на REST пътищата, използвани от интерфейса, по контролери: AuthController, AccountController, CinemaController, HallController, MovieController, ProjectionController, TicketController, ProductController, ReportController.

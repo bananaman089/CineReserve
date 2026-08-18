@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бар · Админ</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="admin-body">
+    <header class="topbar"></header>
+    <div class="admin-shell">
+        <aside class="admin-sidebar" id="adminSidebar"></aside>
+        <main class="admin-main admin-main--page">
+            <h1>Бар продукти</h1>
+            <p class="muted">Сменяй цени, добавяй или скривай продукти.</p>
+
+            <section class="panel" style="margin-top:18px;">
+                <div class="table-wrap">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Продукт</th>
+                                <th>Размер</th>
+                                <th>Цена (€)</th>
+                                <th>Активен</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="productAdminBody"></tbody>
+                    </table>
+                </div>
+
+                <form id="productForm" class="grid-2" style="margin-top:14px;">
+                    <div>
+                        <label>Име</label>
+                        <input id="productName" required>
+                    </div>
+                    <div>
+                        <label>Категория</label>
+                        <select id="productCategory">
+                            <option value="POPCORN">Пуканки</option>
+                            <option value="DRINK">Напитка</option>
+                            <option value="NACHOS">Начос</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Размер / етикет</label>
+                        <input id="productSize" placeholder="Малка / 500мл / Голям">
+                    </div>
+                    <div>
+                        <label>Цена (€)</label>
+                        <input id="productPrice" type="number" min="0.1" step="0.01" required>
+                    </div>
+                    <div>
+                        <label><input id="productSauce" type="checkbox"> Позволява сос (начос)</label>
+                    </div>
+                    <div class="actions" style="align-items:end;">
+                        <button class="btn" type="submit">Добави продукт</button>
+                    </div>
+                </form>
+                <div id="productAdminMsg" class="msg"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/parallax.js"></script>
+    <script src="/js/nav.js"></script>
+    <script src="/js/admin-layout.js"></script>
+    <script>
+        mountAdminSidebar('bar');
+        mountAppNav({ showAdmin: true });
+    </script>
+    <script src="/js/admin-bar.js"></script>
+</body>
+</html>

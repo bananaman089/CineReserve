@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Програма · CineReserve</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <header class="topbar"></header>
+    <main class="container">
+        <div class="page-hero">
+            <h1>Програма</h1>
+            <p class="muted">Избери филм и час. Плащането е от баланса ти.</p>
+        </div>
+        <div id="projectionList" class="program-list"></div>
+        <div id="clientMsg" class="msg"></div>
+    </main>
+    <script src="/js/api.js"></script>
+    <script src="/js/toast.js"></script>
+    <script src="/js/program.js"></script>
+    <script src="/js/parallax.js"></script>
+    <script src="/js/nav.js"></script>
+    <script src="/js/client.js"></script>
+    <script>mountAppNav({ active: 'program' });</script>
+</body>
+</html>

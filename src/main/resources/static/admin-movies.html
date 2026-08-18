@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Филми и прожекции · Админ</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="admin-body">
+    <header class="topbar"></header>
+    <div class="admin-shell">
+        <aside class="admin-sidebar" id="adminSidebar"></aside>
+        <main class="admin-main admin-main--page">
+            <h1>Филми и прожекции</h1>
+            <p class="muted">Добавяй филми и няколко часа за всеки филм (2D/3D).</p>
+
+            <form class="panel" id="movieForm" style="margin-top:18px; max-width:520px;">
+                <h2>Нов филм</h2>
+                <label>Заглавие</label>
+                <input id="movieTitle" required>
+                <label>Описание</label>
+                <textarea id="movieDescription" required></textarea>
+                <label>Продължителност (минути)</label>
+                <input id="movieDuration" type="number" min="1" value="120" required>
+                <div class="actions"><button class="btn" type="submit">Запази филм</button></div>
+                <div id="movieMsg" class="msg"></div>
+            </form>
+
+            <form class="panel proj-panel" id="projectionForm">
+                <h2>Нова прожекция</h2>
+                <p class="muted proj-hint">Избери град, после кината, после залите. Можеш да сложиш една и съща прожекция на няколко места.</p>
+
+                <div class="proj-meta">
+                    <div>
+                        <label for="projMovieId">Филм</label>
+                        <select id="projMovieId" required></select>
+                    </div>
+                    <div>
+                        <label for="projFormat">Формат</label>
+                        <select id="projFormat" required>
+                            <option value="2D">2D</option>
+                            <option value="3D">3D</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="projDate">Дата</label>
+                        <input id="projDate" type="date" required class="date-picker-input">
+                    </div>
+                    <div>
+                        <label>Час</label>
+                        <div class="time-24-row">
+                            <select id="projHour" required></select>
+                            <span class="time-sep">:</span>
+                            <select id="projMinute" required></select>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="projPrice">Базова цена (€)</label>
+                        <input id="projPrice" type="number" min="1" step="0.01" value="12.50" required>
+                    </div>
+                </div>
+
+                <div class="place-picker">
+                    <section class="place-col">
+                        <header class="place-col-head">
+                            <span class="place-step">1</span>
+                            <div>
+                                <h3>Град</h3>
+                                <p id="cityCount">Избери един град</p>
+                            </div>
+                        </header>
+                        <div id="projCityBox" class="place-list"></div>
+                    </section>
+
+                    <section class="place-col" id="cinemaCol">
+                        <header class="place-col-head">
+                            <span class="place-step">2</span>
+                            <div>
+                                <h3>Кина</h3>
+                                <p id="cinemaCount">Първо избери град</p>
+                            </div>
+                            <button type="button" class="place-link" id="btnAllCinemas">Всички</button>
+                        </header>
+                        <input id="cinemaSearch" class="place-search" type="search" placeholder="Търси кино..." hidden>
+                        <div id="projCinemaBox" class="chip-grid"></div>
+                    </section>
+
+                    <section class="place-col" id="hallCol">
+                        <header class="place-col-head">
+                            <span class="place-step">3</span>
+                            <div>
+                                <h3>Зали</h3>
+                                <p id="hallCount">Избери кино, за да видиш залите</p>
+                            </div>
+                            <button type="button" class="place-link" id="btnAllHalls">Всички</button>
+                        </header>
+                        <div id="projHallBox" class="hall-groups"></div>
+                    </section>
+                </div>
+
+                <div class="proj-summary" id="projSummary">Няма избрани зали.</div>
+                <div class="actions"><button class="btn" type="submit">Добави прожекция</button></div>
+                <div id="projMsg" class="msg"></div>
+            </form>
+
+            <section class="panel" style="margin-top:18px;">
+                <h2>Изтриване</h2>
+                <div class="grid-2">
+                    <div>
+                        <label>Филм</label>
+                        <select id="deleteMovieId"></select>
+                        <div class="actions"><button class="btn btn-danger" id="btnDeleteMovie" type="button">Изтрий филм</button></div>
+                    </div>
+                    <div>
+                        <label>Прожекция</label>
+                        <select id="deleteProjectionId"></select>
+                        <div class="actions"><button class="btn btn-danger" id="btnDeleteProjection" type="button">Изтрий прожекция</button></div>
+                    </div>
+                </div>
+                <div id="deleteMsg" class="msg"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/parallax.js"></script>
+    <script src="/js/nav.js"></script>
+    <script src="/js/admin-layout.js"></script>
+    <script>
+        mountAdminSidebar('movies');
+        mountAppNav({ showAdmin: true });
+    </script>
+    <script src="/js/admin-movies.js"></script>
+</body>
+</html>

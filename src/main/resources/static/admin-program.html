@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Програма · Админ</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="admin-body">
+    <header class="topbar"></header>
+    <div class="admin-shell">
+        <aside class="admin-sidebar" id="adminSidebar"></aside>
+        <main class="admin-main admin-main--page">
+            <h1>Преглед на програмата</h1>
+            <p class="muted">Филм → град / кино / салон / формат → часове.</p>
+            <div id="adminProgram" class="program-list" style="margin-top:18px;"></div>
+            <div id="msg" class="msg"></div>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/program.js"></script>
+    <script src="/js/parallax.js"></script>
+    <script src="/js/nav.js"></script>
+    <script src="/js/admin-layout.js"></script>
+    <script>
+        mountAdminSidebar('program');
+        mountAppNav({ showAdmin: true });
+    </script>
+    <script src="/js/admin-program.js"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Храни и напитки · Каса</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="admin-body">
+    <header class="topbar"></header>
+    <div class="admin-shell">
+        <aside class="admin-sidebar" id="cashierSidebar"></aside>
+        <main class="admin-main admin-main--page is-ready">
+            <h1>Храни и напитки</h1>
+            <p class="muted">Първо избери град и кино, после маркирай продукти с количества.</p>
+
+            <section class="panel" style="margin-top:18px;">
+                <div class="grid-2">
+                    <div>
+                        <label for="barCity">Град</label>
+                        <select id="barCity">
+                            <option value="">Избери град</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="barCinema">Кино</label>
+                        <select id="barCinema" disabled>
+                            <option value="">Първо избери град</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <div class="cashier-bar-layout">
+                <section class="panel">
+                    <h2>Продукти</h2>
+                    <div id="productGrid" class="product-grid"></div>
+                    <div id="productMsg" class="msg"></div>
+                </section>
+
+                <aside class="panel cashier-cart">
+                    <h2>Поръчка</h2>
+                    <div id="cartList" class="cart-list">
+                        <p class="muted">Все още няма избрани продукти.</p>
+                    </div>
+                    <p class="cart-total">Общо: <strong id="cartTotal">0.00 €</strong></p>
+                    <div class="actions">
+                        <button class="btn" id="btnPay" type="button" disabled>Плати</button>
+                        <button class="btn btn-secondary" id="btnClearCart" type="button">Изчисти</button>
+                    </div>
+                </aside>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-backdrop" id="payModal" hidden>
+        <div class="modal-card">
+            <button type="button" class="modal-close" id="btnClosePay">×</button>
+            <h2>Начин на плащане</h2>
+            <p class="muted">Обща сума: <strong id="payTotalLabel">0.00 €</strong></p>
+            <div class="actions" style="margin-top:16px;">
+                <button class="btn" id="btnPayCash" type="button">Кеш</button>
+                <button class="btn btn-secondary" id="btnPayCard" type="button">Карта</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="posModal" hidden>
+        <div class="modal-card pos-card">
+            <button type="button" class="modal-close" id="btnClosePos">×</button>
+            <p class="pos-brand">CineReserve POS</p>
+            <p class="pos-amount" id="posAmount">0.00 €</p>
+            <p class="muted pos-hint">Приближете или поставете картата</p>
+            <div class="pos-lights" aria-hidden="true">
+                <span></span><span></span><span></span>
+            </div>
+            <div class="actions">
+                <button class="btn" id="btnPosConfirm" type="button">Потвърди</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="receiptModal" hidden>
+        <div class="modal-card receipt-card">
+            <button type="button" class="modal-close" id="btnCloseReceipt">×</button>
+            <div id="receiptBody" class="receipt-body"></div>
+            <div class="actions">
+                <button class="btn" id="btnCloseReceiptOk" type="button">Готово</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/toast.js"></script>
+    <script src="/js/parallax.js"></script>
+    <script src="/js/nav.js"></script>
+    <script src="/js/cashier-layout.js"></script>
+    <script>
+        mountCashierSidebar('bar');
+        mountAppNav({ showCashier: true });
+    </script>
+    <script src="/js/cashier-bar.js"></script>
+</body>
+</html>
