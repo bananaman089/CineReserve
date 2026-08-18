@@ -67,8 +67,6 @@ spring.datasource.password=тук-си-писваш-паролата
 админ     →  admin     /  admin123
 касиер    →  cashier   /  cashier123
 клиент    →  client    /  client123
-и за вас специялен админ акаунт (същия е ама все пак)
-mr.Gramatikov pass: gramatikov2026
 
 Админът прави кина, зали, филми, прожекции, хора.
 Касиерът продава билети и пуканки.
